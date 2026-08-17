@@ -1,16 +1,12 @@
 cmake_minimum_required(VERSION 3.18)
 project(cuda_samples LANGUAGES CXX CUDA)
 
-# RTX 4090 = Ada Lovelace → sm_89
-if(NOT CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES "89")
-endif()
+# RTX 2080 = Ada Lovelace → sm_75
+set(CMAKE_CUDA_ARCHITECTURES "75")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_BUILD_TYPE Release)
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
 
 find_package(CUDAToolkit REQUIRED COMPONENTS cublas)
 
