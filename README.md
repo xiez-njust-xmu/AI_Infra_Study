@@ -12,6 +12,8 @@
 | [FlashAttentionV1](FlashAttentionV1/) | FlashAttention V1 实现：baseline → v1 → v2 → v3（分块 + online softmax + 融合 kernel，含实现思路笔记） | ✅ |
 | [FlashAttentionV2](FlashAttentionV2/) | FlashAttention V2 实现：v1 → v6（去掉因果 mask 分支、寄存器分块 matmul 优化等） | ✅ |
 | [FlashAttentionV2_Pytorch](FlashAttentionV2_Pytorch/) | FA2 逐步调优（v1→v10，基于 Nsight Compute）+ pytorch 对标与正确性验证脚本 | ✅ |
+| [FlashAttentionV2-PLUS](FlashAttentionV2-PLUS/) | 面向 Blackwell（DGX Spark, sm_121）的 FA forward：Tensor Core MMA + TMA + mbarrier + warp specialization + K/V 双缓冲 | ✅ |
+| [LayerNorm&RMSNorm](LayerNorm&RMSNorm/) | LayerNorm / RMSNorm 手写 kernel，以及第三方参考实现：RMSNorm（H100/B200）、torchnorm | ✅ |
 
 ## 学习路径
 
@@ -21,6 +23,8 @@
 4. **FlashAttention V1** —— 可并行矩阵乘分片 + online softmax 融合，理解 FlashAttention 核心思路
 5. **FlashAttention V2** —— 对比 V1 的进一步优化（不存储 N×N 中间矩阵、减少寄存器依赖）
 6. **FlashAttention V2 调优（PyTorch 对照）** —— 基于 Nsight Compute 逐步优化（bank conflict、寄存器、双缓冲等），并用 `verify_output.py` 和 PyTorch 交互验证正确性
+7. **FlashAttention V2-PLUS（Blackwell）** —— 进阶到下一代架构：Tensor Core MMA + TMA 异步搬运 + mbarrier + warp specialization 的完整现代实现
+8. **LayerNorm / RMSNorm** —— 归一化算子手写 kernel，并对照 H100/B200 上的生产级参考实现（INT21 PTX Kernel Factory、torchnorm）
 
 ## 编译运行
 
@@ -32,6 +36,10 @@ cd Vector && cmake -B build && cmake --build build
 
 # FlashAttention 系列
 cd FlashAttentionV1 && cmake -B build && cmake --build build
+
+# FlashAttention V2-PLUS（Blackwell, sm_121）
+cd FlashAttentionV2-PLUS && cmake -B build && cmake --build build
+./build/flash_attention_v2_plus [B H N d]   # 默认 B=4 H=8 N=8192 d=64
 ```
 
 > 备注：CMake 默认架构为 sm_89（RTX 4090 / Ada Lovelace）。GEMM / SoftMAX 预留了 sm_75 兼容；
@@ -52,9 +60,11 @@ python3 verify_output.py result.out
 - GPU: NVIDIA RTX 4090（Ada Lovelace, sm_89）
 - 编译: CMake + CUDA Toolkit
 - (FlashAttentionV2_Pytorch 原参考来源为 A10G 环境，注意默认参数 M=N=8192, d=32)
+- (FlashAttentionV2-PLUS 目标为 DGX Spark / Blackwell sm_121，仅在该架构上编译；LayerNorm&RMSNorm 下的 H100/B200 参考实现同理)
 
 ## TODO
 
-- [ ] 用 Tensor Core（fp16）做 FlashAttention 的 matmul，支持多 head
+- [ ] FlashAttention backward
 - [x] FlashAttention
-- [ ] 更多算子优化（LayerNorm、Matmul + 融合）
+- [x] LayerNorm / RMSNorm 手写 kernel
+- [ ] 更多算子融合优化（Matmul + 融合、KV cache / PagedAttention 等）
