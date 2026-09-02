@@ -14,6 +14,7 @@
 | [FlashAttentionV2_Pytorch](FlashAttentionV2_Pytorch/) | FA2 逐步调优（v1→v10，基于 Nsight Compute）+ pytorch 对标与正确性验证脚本 | ✅ |
 | [FlashAttentionV2-PLUS](FlashAttentionV2-PLUS/) | 面向 Blackwell（DGX Spark, sm_121）的 FA forward：Tensor Core MMA + TMA + mbarrier + warp specialization + K/V 双缓冲 | ✅ |
 | [LayerNorm&RMSNorm](LayerNorm&RMSNorm/) | LayerNorm / RMSNorm 手写 kernel，以及第三方参考实现：RMSNorm（H100/B200）、torchnorm | ✅ |
+| [Python](Python/) | PyTorch 层学习：Transformer（MHA/RoPE/SwiGLU/Decode Block）、模型组织、训练循环、混合精度、分布通信（NCCL）、性能分析 | ✅ |
 
 ## 学习路径
 
@@ -25,6 +26,7 @@
 6. **FlashAttention V2 调优（PyTorch 对照）** —— 基于 Nsight Compute 逐步优化（bank conflict、寄存器、双缓冲等），并用 `verify_output.py` 和 PyTorch 交互验证正确性
 7. **FlashAttention V2-PLUS（Blackwell）** —— 进阶到下一代架构：Tensor Core MMA + TMA 异步搬运 + mbarrier + warp specialization 的完整现代实现
 8. **LayerNorm / RMSNorm** —— 归一化算子手写 kernel，并对照 H100/B200 上的生产级参考实现（INT21 PTX Kernel Factory、torchnorm）
+9. **Python（PyTorch 框架层）** —— 用 PyTorch 串起模型/算子全貌：Transformer 解码块、RoPE、SwiGLU、混合精度训练、NCCL 分布式通信、torch.profiler 性能分析
 
 ## 编译运行
 
@@ -44,6 +46,12 @@ cd FlashAttentionV2-PLUS && cmake -B build && cmake --build build
 
 > 备注：CMake 默认架构为 sm_89（RTX 4090 / Ada Lovelace）。GEMM / SoftMAX 预留了 sm_75 兼容；
 > 如有需要可在构建时显式指定：`cmake -B build -DCMAKE_CUDA_ARCHITECTURES=89`
+
+`Python/` 下的 `.py` 文件无需编译，直接运行即可（需要装了 CUDA 版 PyTorch 的环境）：
+
+```bash
+cd Python && python "Transformer.py"
+```
 
 ### FlashAttentionV2_Pytorch 正确性验证
 
